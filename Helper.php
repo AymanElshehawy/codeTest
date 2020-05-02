@@ -9,22 +9,32 @@ class Helper
      */
     private $DB;
 
-    public function __construct($arguments)
+    public function __construct()
+    {
+        $this->DB = new Database();
+    }
+    public function setArguments($arguments)
     {
         $this->arguments = $arguments;
-//        $this->checkArgs();
-//        $this->checkArgs();
-        $this->storeToDB();
+        $this->init();
     }
 
-    public function checkArgs()
+    private function init()
+    {
+        $this->checkArgs();
+        $this->checkArgsInt();
+        $this->storeToDB();
+        $this->getLastFiveRows();
+    }
+
+    private function checkArgs()
     {
         if (empty($this->arguments[1]) || empty($this->arguments[2])){
             exit('No Params Sent!');
         }
     }
 
-    public function checkArgsInt()
+    private function checkArgsInt()
     {
         if (!is_int((int) $this->arguments[1]) && !is_int((int) $this->arguments[1])){
             exit('Params Must be integers!');
@@ -34,29 +44,52 @@ class Helper
     /**
      * @return float|int
      */
-    public function getAverage()
+    private function getAverage()
     {
         return ((int) $this->arguments[1] + (int) $this->arguments[2]) / 2;
     }
 
-    public function getArea()
+    private function getArea()
     {
         return ((int) $this->arguments[1] * (int) $this->arguments[2]);
 
     }
 
-    public function getSquared()
+    private function getSquared()
     {
         return pow($this->getArea(), 2);
     }
 
-    public function storeToDB()
+    private function storeToDB()
     {
         try {
-            $this->DB = new Database();
-//            var_dump($this->DB);
+            $this->DB->insert((int) $this->arguments[1], (int) $this->arguments[2], $this->getAverage(), $this->getArea(), $this->getSquared());
+            // exit('Insert into DB');
         }catch (Exception $e){
             exit($e->getMessage());
+        }
+    }
+
+    private function getLastFiveRows()
+    {
+        try {
+            $rows = $this->DB->getLastFiveRows();
+            foreach($rows as $key=>$row){
+                echo $key." => ID: ".$row['id'] . " First Number: ".$row['first_number']. " Second Number: ".$row['second_number']. " Average: ".$row['average']. " Area: ".$row['area']. " Squared: ".$row['squared']."\n";
+            }
+        }
+        catch(PDOException $e) {
+            echo "Error: " . $e->getMessage();
+        }
+    }
+
+    public function showRecordsAsHtml()
+    {
+        try {
+            return $this->DB->getLastFiveRows();
+        }
+        catch(PDOException $e) {
+            echo "Error: " . $e->getMessage();
         }
     }
 }
